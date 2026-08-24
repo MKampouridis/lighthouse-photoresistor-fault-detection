@@ -146,8 +146,10 @@ numerically identical to `zenith` / `elevation` and are excluded from the search
                                        derived from the station argument
     drifted_analysis_for_GA.py         Fitness function: check_drifting(chromosome)
                                        returns one slope per lighthouse
-    GLA.py                             Cluster entry point
-    run.sh                             Sun Grid Engine submission script
+    GLA.py                             Entry point for the custom-EA task (see
+                                       "Known gaps"); NOT the NSGA-III driver
+    run.sh                             Grid Engine submission script -- submits
+                                       GLA.py, not NSGA3_DEAP.py (see note below)
     exhaustive_baseline/               Brute-force enumeration of feature subsets,
                                        used as the comparison baseline (NLB/TH,
                                        plus chunked variants for parallel jobs)
@@ -246,7 +248,13 @@ cd 3_nsga3
 python NSGA3_DEAP.py NLB True                  # station: NLB|TH, first_values: True|False
 ```
 
-On a Sun Grid Engine cluster, `qsub run.sh NLB True`.
+> **`run.sh` does not launch NSGA-III.** It submits `./GLA.py "$@"`, the custom-EA task, which
+> does not read `sys.argv` at all — so the station and first-values arguments would be silently
+> ignored. `GLA.py` writes the `Results/Logs/` output of the custom framework, whereas the
+> NSGA-III runs produced DEAP logbooks; the two are different experiments. No submission script
+> for `NSGA3_DEAP.py` survives in the source project, so how those runs were launched is not
+> recorded here. The `#$` directives identify Grid Engine as a family, not a specific
+> distribution.
 
 ### Search parameters
 
@@ -298,6 +306,61 @@ python 4_analysis/CERES_analysis_EA3456.py
 
 Both analysis scripts read the evolutionary run logs by path (`./CERES_results/EA*/Tasks/*.txt`).
 Those logs are ~19 MB of raw output derived from GLA data and are **not** included here — see below.
+
+---
+
+## Computational cost
+
+The cost of the pipeline is dominated by stage 3, and within it entirely by repeated model
+training. With `L` lighthouses, `n` training observations, `d` selected features, `h` hidden
+units, `k` folds and `τ` training iterations:
+
+| Unit | Cost |
+|---|---|
+| One MLP fit | `O(τ n d h)` |
+| One per-station model selection (`learn()`) | `O(k τ n d h)` |
+| One fitness evaluation (all stations) | `O(L k τ n d h)` |
+| One full NSGA-III run | `O(P G L k τ n d h)` + `O(G M P²)` |
+
+The `O(G M P²)` term covers non-dominated sorting and reference-point association. At the
+population sizes used it is ~4.5 × 10⁻⁷ of the total, so many-objective selection is *not* the
+expensive part — model training is.
+
+An exhaustive search costs the same per subset but must evaluate all `2^28` of them, so the
+saving from the evolutionary approach is `2^28 / (P·G)`. The runs recorded in the source project
+used ~1.2 × 10⁴ evaluations, against 2.7 × 10⁸ for exhaustive enumeration: **under 0.005% of the
+space, a reduction of more than four orders of magnitude.**
+
+### Indicative measurements
+
+Measured on an Apple M1 (8 cores), scikit-learn 1.3.2, against a real NLB merged dataset
+(~22,000 observations, 17,496 after the 0.25 split). **These are not cluster benchmarks.**
+
+| | |
+|---|---|
+| One MLP fit, 14 features, EA6 config | ~0.6 s |
+| One `learn()` call (10-fold CV + refit) | 6.5 s single-threaded, 4.8 s at `n_jobs=8` |
+| One fitness evaluation (8 stations) | ~55 s single-threaded |
+| Stage 2, eight algorithms, per dataset | ~31 min single-threaded |
+
+Because `early_stopping=True` with `n_iter_no_change=10`, training halts at roughly 20 iterations
+regardless of whether `max_iter` is 200, 1000 or 2000 — so the EA3–EA6 configurations differ far
+less in cost than their hyperparameters suggest. Only the hidden-layer width matters materially
+(~0.2 s at `h=4` versus ~0.6 s at `h=29`).
+
+### Parallelism
+
+As published, the only parallelism is `GridSearchCV(n_jobs=50)` inside `learn()`. Two points:
+
+1. **`n_jobs=50` is over-requested by 5×.** The MLP grid holds a single parameter combination, so
+   with `cv=10` there are only 10 tasks; joblib spawns `min(n_jobs, n_tasks)` workers. Peak
+   concurrency is 10 regardless. With sub-second fits, process-spawn overhead consumes much of
+   even that: 6.5 s at `n_jobs=1` versus 4.8 s at `n_jobs=8` is a 1.4× gain, not 8×.
+2. **Two levels of embarrassing parallelism are unused.** The per-station loop in
+   `check_drifting` is a plain serial `for`, and `toolbox.map` is never registered so DEAP falls
+   back to builtin `map()`. Registering a multiprocessing pool over the population is a two-line
+   change and by far the largest available speed-up; if you do that, set `njobs = 1` so the two
+   levels do not oversubscribe.
 
 ---
 
