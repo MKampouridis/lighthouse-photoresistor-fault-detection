@@ -248,27 +248,34 @@ python NSGA3_DEAP.py NLB True                  # station: NLB|TH, first_values: 
 
 On a Sun Grid Engine cluster, `qsub run.sh NLB True`.
 
-Search parameters, as reported in the paper:
+### Search parameters
 
-> **Discrepancy — please read.** Section 4 of the paper reports a tuned NSGA-III
-> configuration of **population 300, 35 generations, crossover 0.9, mutation 0.1**. The code
-> in this repository does **not** use those values, and no variant matching them was found in
-> the source project. Both are given below; the code column is what this repository will
-> actually execute.
+The published configuration is the one reported in Section 4 of the paper, obtained by grid search
+and compared across configurations with a Friedman test:
 
-| Parameter | Paper (§4) | This code |
-|---|---|---|
-| Population (μ = λ) | 300 | derived from reference points: **804** (NLB, 8 obj) / **472** (TH, 7 obj) |
-| Generations | 35 | 50 |
-| Crossover | 0.9 | one-point, 0.85 |
-| Mutation | 0.1 | bit-flip, 0.15 (per-gene `indpb = 0.125`) |
-| Reference points | — | two-layer, `P = [5, 4]`, `SCALES = [1, 0.5]` |
-| Selection | — | `selNSGA3` |
-| Objectives | — | 8 (NLB) / 7 (TH), doubling to 16 / 14 with `first_values` |
+| Parameter | Published value |
+|---|---|
+| Population | **300** |
+| Generations | **35** |
+| Crossover rate | **0.9** |
+| Mutation rate | **0.1** |
+| Selection | `selNSGA3` |
+| Reference points | two-layer, `P = [5, 4]`, `SCALES = [1, 0.5]` |
+| Objectives | 8 (NLB) / 7 (TH); 16 / 14 with `first_values` enabled |
 
-Note that with `first_values` enabled the derived population becomes 15,524 (NLB) or 8,584 (TH).
-Since every fitness evaluation retrains an MLP and re-runs the full drift evaluation, runs at that
-size are unlikely to be what produced the published results.
+> **The scripts in this repository are set to other values.** `NSGA3_DEAP.py` as committed carries
+> the settings of a *different* experimental run — 50 generations, crossover 0.85, mutation 0.15,
+> and a population derived from the reference-point count rather than fixed at 300. The scripts are
+> published in that state because that is how those experiments were run; they have not been
+> back-edited. **To reproduce the paper, set the four values above** at the top of
+> `3_nsga3/NSGA3_DEAP.py`:
+>
+> ```python
+> MU = LAMBDA = 300   # replace: MU = int(H + (4 - H % 4))
+> NGEN  = 35          # replace: 50
+> CXPB  = 0.9         # replace: .85
+> MUTPB = 0.1         # replace: .15
+> ```
 
 The inner classifier is an MLP. Four configurations were run; they differ **only** in these two
 hyperparameters. `3_nsga3/drifted_analysis_for_GA.py` ships as the EA6 configuration — reproduce any

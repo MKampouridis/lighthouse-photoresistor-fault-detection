@@ -63,6 +63,23 @@ class MyCustomProblem(Problem):
 n_var = NDIM
 PROBLEM = MyCustomProblem(n_var)
 
+# ---------------------------------------------------------------------------
+# NOTE ON REPRODUCING THE PAPER
+#
+# The settings below are those of a different experimental run, not the
+# configuration reported in the paper. The published NSGA-III setup (paper,
+# Section 4) is:
+#
+#     MU = LAMBDA = 300
+#     NGEN  = 35
+#     CXPB  = 0.9
+#     MUTPB = 0.1
+#
+# Substitute those four values to reproduce the published results. The lines
+# are left as-run rather than back-edited, so that this file remains an
+# accurate record of the experiment it was used for.
+# ---------------------------------------------------------------------------
+
 # We're using (μ + λ) EA strategy (former being parent population, and latter being offspring population)
 MU = int(H + (4 - H % 4))
 LAMBDA = MU  # number of children to be produced during crossover and mutation
