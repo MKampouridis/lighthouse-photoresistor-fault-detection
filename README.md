@@ -8,6 +8,8 @@ using a photoresistor that senses ambient light. Over time these sensors **drift
 switching progressively earlier or later than the ambient light conditions warrant. Drift is gradual,
 there is no ground-truth fault label, and a sensor can be substantially out before anyone notices.
 
+The study covers 42 months of telemetry, June 2017 to December 2021, across 15 lighthouses.
+
 This work treats drift detection as a by-product of a classification problem. A model is trained to
 predict the sensor's state (`On` / `Off`) from weather and solar-geometry features at the moment of
 each switching event. If the model is a faithful description of a *healthy* sensor, then feeding it
@@ -96,7 +98,8 @@ count doubles to **16** for NLB and **14** for TH.
 
 ### Features
 
-28 features in total — 17 base plus 11 two-step moving averages:
+28 features in total — 17 base plus 11 two-step moving averages — giving the 2^28 feature
+combinations the paper's search space refers to:
 
 - **Weather** (ERA5): `Temp2m`, `Dewpoint2m`, `Pressure`, `Precipitation`
 - **Irradiance** (CAMS, observed-cloud): `GHI_N`, `DHI_N`, `BNI_N`
@@ -247,15 +250,25 @@ On a Sun Grid Engine cluster, `qsub run.sh NLB True`.
 
 Search parameters, as reported in the paper:
 
-| Parameter | Value |
-|---|---|
-| Reference points | two-layer, `P = [5, 4]`, `SCALES = [1, 0.5]` |
-| Population (μ = λ) | derived from the reference-point count, rounded up to a multiple of 4 |
-| Generations | 50 |
-| Crossover | one-point, `p = 0.85` |
-| Mutation | bit-flip, `p = 0.15`, per-gene `indpb = 0.125` |
-| Selection | `selNSGA3` |
-| Objectives | 8 (NLB) / 7 (TH), doubling to 16 / 14 with `first_values` |
+> **Discrepancy — please read.** Section 4 of the paper reports a tuned NSGA-III
+> configuration of **population 300, 35 generations, crossover 0.9, mutation 0.1**. The code
+> in this repository does **not** use those values, and no variant matching them was found in
+> the source project. Both are given below; the code column is what this repository will
+> actually execute.
+
+| Parameter | Paper (§4) | This code |
+|---|---|---|
+| Population (μ = λ) | 300 | derived from reference points: **804** (NLB, 8 obj) / **472** (TH, 7 obj) |
+| Generations | 35 | 50 |
+| Crossover | 0.9 | one-point, 0.85 |
+| Mutation | 0.1 | bit-flip, 0.15 (per-gene `indpb = 0.125`) |
+| Reference points | — | two-layer, `P = [5, 4]`, `SCALES = [1, 0.5]` |
+| Selection | — | `selNSGA3` |
+| Objectives | — | 8 (NLB) / 7 (TH), doubling to 16 / 14 with `first_values` |
+
+Note that with `first_values` enabled the derived population becomes 15,524 (NLB) or 8,584 (TH).
+Since every fitness evaluation retrains an MLP and re-runs the full drift evaluation, runs at that
+size are unlikely to be what produced the published results.
 
 The inner classifier is an MLP. Four configurations were run; they differ **only** in these two
 hyperparameters. `3_nsga3/drifted_analysis_for_GA.py` ships as the EA6 configuration — reproduce any
@@ -307,10 +320,10 @@ Stated plainly, so nobody loses time on them:
 
 ## Citation
 
-> Fault Detection in Lighthouse Photoresistor Sensor using Machine Learning and Many-Objective
-> Optimisation.
+> Dost, S., Christodoulaki, E., Vastardis, N., & Kampouridis, M. Fault Detection in Lighthouse
+> Photoresistor Sensor using Machine Learning and Many-Objective Optimisation.
 
-*(Full citation to be completed on publication.)*
+*(Volume, pages and DOI to be completed on publication.)*
 
 ## Data availability
 
