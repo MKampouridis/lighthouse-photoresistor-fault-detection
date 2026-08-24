@@ -1,0 +1,129 @@
+# ---------------------------------------------------------------------------
+# Data and outputs
+#
+# No GLA telemetry, derived dataset, or trained model belongs in this
+# repository. The patterns below are deliberately broad: the raw telemetry is
+# restricted and the intermediate datasets are several gigabytes.
+# ---------------------------------------------------------------------------
+data/
+NLB/
+TH/
+Merged datasets/
+Merged_datasets/
+results-temp/
+results-temp2/
+CERES_results/
+drifted/
+input-utc/
+input-utc-cl/
+Telemetry Data-UTC/
+Climate Data/
+x-y test sets/
+moving_averages/
+
+# Data and model artefacts, wherever they appear
+*.csv
+*.xlsx
+*.xls
+*.nc
+*.pkl
+*.joblib
+*.h5
+*.parquet
+weather_data.csv
+solar_insolation_data.csv
+
+# Evolutionary-run logs (NLB_*.txt / TH_*.txt) and exported trees.
+# best_features.txt is committed deliberately -- see the negation below.
+*_firstValues.txt
+*_nofirstValues.txt
+*_all_combinations.txt
+NLB_[0-9]*.txt
+TH_[0-9]*.txt
+!best_features.txt
+
+# ---------------------------------------------------------------------------
+# Secrets
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+.cdsapirc
+*.pem
+*.key
+secrets.*
+credentials.*
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+.python-version
+.conda/
+
+# Testing / coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ---------------------------------------------------------------------------
+# Editors and OS
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# ---------------------------------------------------------------------------
+# Cluster job output (Sun Grid Engine on CERES)
+# ---------------------------------------------------------------------------
+*.o[0-9]*
+*.e[0-9]*
+*.po[0-9]*
+*.pe[0-9]*
+Results/
+Logs/

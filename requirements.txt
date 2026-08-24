@@ -1,0 +1,38 @@
+# Fault Detection in Lighthouse Photoresistor Sensor
+# using Machine Learning and Many-Objective Optimisation
+#
+# Python 3.10 recommended (the notebook was run on Colab's 3.10; >=3.9 works).
+#
+# Versions below are those the analysis was run against. Install with:
+#     pip install -r requirements.txt
+
+# --- Core data handling ---
+numpy==1.26.2
+pandas==2.1.3
+pytz==2023.3.post1
+natsort==8.4.0
+
+# --- Machine learning (stages 2 and 3) ---
+scikit-learn==1.3.2
+xgboost==2.0.2
+
+# --- Many-objective optimisation (stage 3) ---
+deap==1.4.1
+pymop==0.2.4          # NOTE: unmaintained, superseded by pymoo. Only Problem/factory
+                      # are used, by NSGA3_DEAP.py. See "Known gaps" in the README.
+
+# --- Solar geometry and clear-sky irradiance (stage 1) ---
+pvlib==0.10.3
+
+# --- Plotting / statistics (notebook and figures) ---
+matplotlib==3.9.4
+scipy==1.11.4
+seaborn                # notebook only; unpinned, any recent 0.12/0.13 works
+
+# --- Climate data acquisition (stage 1, optional) ---
+# Only needed to re-download ERA5 / CAMS data via get_climate_data.py.
+# Unpinned: these were installed in a separate environment from the analysis.
+cdsapi
+netCDF4
+ephem                  # solar altitude in process_telemetry_data*.py
+openpyxl               # pandas .xlsx reading in process_telemetry_data*.py
