@@ -92,9 +92,13 @@ lighthouse the model has never seen.
 | **NLB** (Northern Lighthouse Board) | Balta Sound, Dunnet Head, Flotta Grinds Buoy, Mousa, North Rona, North Ronaldsay, Sule Skerry, Sumburgh Head | 8 |
 | **TH** (Trinity House) | Bishop Rock, Eddystone, Godrevy, Lizard, Longships, Trevose, Wolf Rock | 7 |
 
-With the optional `first_values` objectives enabled (which additionally reward a high *starting*
-accuracy, so the search cannot win by picking a model that is uniformly terrible), the objective
-count doubles to **16** for NLB and **14** for TH.
+The objectives are the slopes, one per lighthouse, and nothing else: this is the configuration
+behind the results in the paper, with **8** objectives for NLB and **7** for TH (`first_values` set
+to `False`).
+
+The scripts also carry an optional `first_values` variant, which is **not** reported in the paper.
+It adds each lighthouse's *starting* accuracy (its accuracy at the smallest drift) as a further
+objective, to be maximised, which doubles the objective count to **16** for NLB and **14** for TH.
 
 ### Features
 
@@ -245,8 +249,11 @@ are commented in place rather than deleted.
 
 ```bash
 cd 3_nsga3
-python NSGA3_DEAP.py NLB True                  # station: NLB|TH, first_values: True|False
+python NSGA3_DEAP.py NLB False                 # station: NLB|TH, first_values: True|False
 ```
+
+`False` (slopes only) is the configuration reported in the paper; `True` runs the unreported
+`first_values` variant.
 
 > **`run.sh` does not launch NSGA-III.** It submits `./GLA.py "$@"`, the custom-EA task, which
 > does not read `sys.argv` at all — so the station and first-values arguments would be silently
@@ -269,7 +276,7 @@ and compared across configurations with a Friedman test:
 | Mutation rate | **0.1** |
 | Selection | `selNSGA3` |
 | Reference points | two-layer, `P = [5, 4]`, `SCALES = [1, 0.5]` |
-| Objectives | 8 (NLB) / 7 (TH); 16 / 14 with `first_values` enabled |
+| Objectives | 8 (NLB) / 7 (TH): slopes only, `first_values` off |
 
 > **The scripts in this repository are set to other values.** `NSGA3_DEAP.py` as committed carries
 > the settings of a *different* experimental run — 50 generations, crossover 0.85, mutation 0.15,
@@ -306,6 +313,13 @@ python 4_analysis/CERES_analysis_EA3456.py
 
 Both analysis scripts read the evolutionary run logs by path (`./CERES_results/EA*/Tasks/*.txt`).
 Those logs are ~19 MB of raw output derived from GLA data and are **not** included here — see below.
+
+`CERES_analysis_EA3456.py` as committed is set up for a different analysis from the one behind the
+paper: it reads the `_firstValues` logs of the unreported `first_values` variant, for which it also
+requires a starting accuracy above 60% at every lighthouse. The solutions in the paper come from
+the slopes-only runs, i.e. the `_nofirstValues` logs; to analyse those, swap the commented and
+uncommented entries of `file_paths` and adjust `threshold` (the starting-accuracy check is then
+skipped). The script is left as-run rather than back-edited.
 
 ---
 
