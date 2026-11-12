@@ -1,3 +1,22 @@
+# ---------------------------------------------------------------------------
+# NOTE ON REPRODUCING THE PAPER
+#
+# The settings below are those of a different analysis, not the one behind the
+# paper. As committed, this script reads the `_firstValues` logs, i.e. the runs
+# of the optional first_values variant (slopes plus starting accuracies as
+# objectives), which is not reported in the paper. For those logs it also
+# requires a starting accuracy above 60% at every lighthouse
+# (accuracy_threshold).
+#
+# The solutions reported in the paper come from the slopes-only runs, i.e. the
+# `_nofirstValues` logs. To analyse those, swap the commented and uncommented
+# entries of file_paths and adjust threshold (see the comment on that line);
+# the starting-accuracy check is then skipped.
+#
+# The lines are left as-run rather than back-edited, so that this file remains
+# an accurate record of the analysis it was used for.
+# ---------------------------------------------------------------------------
+
 files_with_tuples_below_threshold = {}
 threshold = -0.01# -0.019 for TH_noFirstValues; -0.01 for TH_firstValues
 accuracy_threshold = -0.6
